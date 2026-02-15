@@ -1,4 +1,5 @@
-#include <stdio.h>
+#include "my_nm.h"
+
 int main(void) {
-	printf("oieoie");
+	teste_include();
 }

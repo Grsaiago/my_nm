@@ -1,0 +1,9 @@
+CompileFlags:
+    Compiler: clang
+    Add:
+        - -Wall,
+        - -Wextra,
+        - -Werror,
+        - -Wpedantic,
+        - -I/home/gsaiago/estudo/c/my_nm/include
+        - -xc

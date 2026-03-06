@@ -1,0 +1,38 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Wpedantic",
+      "-std=c99",
+      "-I./include/",
+      "-c",
+      "-o",
+      "objs/elf_header.o",
+      "src/elf_header.c"
+    ],
+    "directory": "/home/gsaiago/estudo/c/my_nm",
+    "file": "/home/gsaiago/estudo/c/my_nm/src/elf_header.c",
+    "output": "/home/gsaiago/estudo/c/my_nm/objs/elf_header.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Wpedantic",
+      "-std=c99",
+      "-I./include/",
+      "-c",
+      "-o",
+      "objs/section_header.o",
+      "src/section_header.c"
+    ],
+    "directory": "/home/gsaiago/estudo/c/my_nm",
+    "file": "/home/gsaiago/estudo/c/my_nm/src/section_header.c",
+    "output": "/home/gsaiago/estudo/c/my_nm/objs/section_header.o"
+  }
+]

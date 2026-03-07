@@ -2,6 +2,7 @@
 # define MY_NM
 
 # include <elf.h>
+#include <stddef.h>
 # include <stdio.h>
 # include <unistd.h>
 # include <string.h>
@@ -22,42 +23,54 @@ typedef struct object_file {
     size_t size;
 }   ObjectFile;
 
+typedef struct symbol_header_table_iterator {
+    char *table;
+    size_t  entry_size;
+    size_t  entry_count;
+    size_t  current_index;
+}   SectionHeaderTable;
+
 typedef struct elf_header {
     char data[sizeof(Elf64_Ehdr)];
 }   ElfHeader;
 
-typedef struct section_header_table {
-    ArchType    arch;
-    char        *table;
-    char        *header_cursor;
-}   SectionHeaderTable;
+typedef struct elf_file {
+    ObjectFile  file_data;
+    ElfHeader   hdr;
+    SectionHeaderTable sh_table;
+}   ElfFile;
 
-/* object file manipulation */
-int load_object_file(char *name, ObjectFile *obj);
-void free_object_file(ObjectFile *obj);
+/* ElfFile */
+int         elf_file_load(char *path, ElfFile *elf);
+void        elf_file_free(ElfFile *elf);
+ArchType    elf_get_arch_type(ElfFile *elf);
 
-/* elf header manipulation */
-int         ehdr_parse_from_obj(ObjectFile *obj_file, ElfHeader *header);
-ArchType    ehdr_get_arch_type(ElfHeader *header);
-void        ehdr_debug_print(ElfHeader *header);
+/* ELF header */
+int         elf_hdr_parse(ElfFile *elf);
+void        elf_hdr_debug_print(ElfFile *elf);
 
-/* elf header getters */
-uint16_t    ehdr_get_type(ElfHeader *header);
-uint16_t    ehdr_get_machine(ElfHeader *header);
-uint32_t    ehdr_get_version(ElfHeader *header);
-uint64_t    ehdr_get_entry(ElfHeader *header);
-uint64_t    ehdr_get_phoff(ElfHeader *header);
-uint64_t    ehdr_get_shoff(ElfHeader *header);
-uint32_t    ehdr_get_flags(ElfHeader *header);
-uint16_t    ehdr_get_ehsize(ElfHeader *header);
-uint16_t    ehdr_get_phentsize(ElfHeader *header);
-uint16_t    ehdr_get_phnum(ElfHeader *header);
-uint16_t    ehdr_get_shentsize(ElfHeader *header);
-uint16_t    ehdr_get_shnum(ElfHeader *header);
-uint16_t    ehdr_get_shstrndx(ElfHeader *header);
+/* ELF header getters */
+uint16_t    elf_hdr_get_type(ElfFile *elf);
+uint16_t    elf_hdr_get_machine(ElfFile *elf);
+uint32_t    elf_hdr_version(ElfFile *elf);
+uint64_t    elf_hdr_get_entry(ElfFile *elf);
+uint64_t    elf_hdr_get_phoff(ElfFile *elf);
+uint64_t    elf_hdr_get_shoff(ElfFile *elf);
+uint32_t    elf_hdr_get_flags(ElfFile *elf);
+uint16_t    elf_hdr_get_ehsize(ElfFile *elf);
+uint16_t    elf_hdr_get_phentsize(ElfFile *elf);
+uint16_t    elf_hdr_get_phnum(ElfFile *elf);
+uint16_t    elf_hdr_get_shentsize(ElfFile *elf);
+uint16_t    elf_hdr_get_shnum(ElfFile *elf);
+uint16_t    elf_hdr_get_shstrndx(ElfFile *elf);
 
-/* section headers */
-int shdrt_create_from_obj(ObjectFile *obj_file, ElfHeader *elf_hdr, SectionHeaderTable *table);
-void shdrt_free(SectionHeaderTable *table);
+/* Section header iteration */
+int         sh_table_parse(ElfFile *elf);
+void        sh_table_free(SectionHeaderTable *tbl);
+void*       sh_table_get_current(ElfFile *elf);
+void*       sh_table_get_at(ElfFile *elf, size_t index);
+int         sh_table_next(ElfFile *elf);
+void        sh_table_reset(ElfFile *elf);
+int         sh_table_has_more(ElfFile *elf);
 
 #endif // MY_NM

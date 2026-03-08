@@ -18,9 +18,8 @@ OBJS = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRCS))
 TEST_OBJS = $(patsubst $(TEST_DIR)/%.c,$(TEST_OBJ_DIR)/%.o,$(TEST_SRCS))
 LIB_OBJS = $(filter-out $(OBJ_DIR)/main.o,$(OBJS))
 
-.PHONY: help
-help: ## Show this help message
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
+.PHONY: all
+all: help
 
 $(NAME): $(OBJS)
 	$(CC) $(OBJS) -o $(NAME)
@@ -42,6 +41,11 @@ $(TEST_OBJ_DIR)/%.o: $(TEST_DIR)/%.c | $(TEST_OBJ_DIR)
 $(TEST_NAME): $(LIB_OBJS) $(TEST_OBJS)
 	$(CC) $(LIB_OBJS) $(TEST_OBJS) -o $(TEST_NAME) $(INCLUDES) $(TEST_INCLUDES)
 
+
+.PHONY: help
+help: ## Show this help message
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
+
 .PHONY: build
 build: $(NAME) ## Build the project (default)
 
@@ -58,4 +62,4 @@ clean: ## Remove build artifacts
 	rm -rf $(OBJ_DIR) $(NAME) $(TEST_NAME)
 
 .PHONY: re
-re: clean all ## Clean and rebuild everything
+re: clean build ## Clean and rebuild everything

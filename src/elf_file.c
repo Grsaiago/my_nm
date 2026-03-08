@@ -62,9 +62,6 @@ void elf_file_free(ElfFile *elf) {
 		munmap(elf->file_data.data, elf->file_data.size);
 		elf->file_data.data = NULL;
 	}
-	if (elf->sh_table.table != NULL) {
-		sh_table_free(&elf->sh_table);
-	}
 }
 
 /**

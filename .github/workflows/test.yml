@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: Run Tests
 
 on:
   push:
@@ -7,13 +7,12 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
-
+  run_tests:
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
     - name: "install deps"
-      run: ./configure.sh
+      run: sudo ./configure.sh
     - name: "run tests"
       run: make test

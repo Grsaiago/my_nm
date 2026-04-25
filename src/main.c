@@ -5,7 +5,7 @@ int main(int argc, char **argv) {
 	ElfFile elf;
 	int     result;
 
-	if (argc < 2) {
+	if (argc != 2) {
 		fprintf(stderr, "Usage: %s <elf_file>\n", argv[0]);
 		return (1);
 	}

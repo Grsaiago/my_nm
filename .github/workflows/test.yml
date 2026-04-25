@@ -14,6 +14,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: "install deps"
-      run: ./configure.sh
+      run: sudo ./configure.sh
     - name: "run tests"
       run: make test

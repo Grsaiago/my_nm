@@ -17,7 +17,7 @@ SymbolList *symblst_new(void *addr, char *name, bool is_heap_allocated,
 	return (new);
 }
 
-void symblst_clear(SymbolList **lst, void (*del)(SymbolList *)) {
+void symblst_clear(SymbolList **lst) {
 	void	   *aux;
 	SymbolList *node;
 
@@ -26,8 +26,9 @@ void symblst_clear(SymbolList **lst, void (*del)(SymbolList *)) {
 	node = *lst;
 	while (node) {
 		aux = node->next;
-		if (del)
-			del(node);
+		if (node->heap_allocated) {
+			free(node->name);
+		}
 		free(node);
 		node = aux;
 	}

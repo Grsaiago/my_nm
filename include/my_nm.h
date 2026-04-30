@@ -96,7 +96,7 @@ uint16_t elf_hdr_get_shentsize(ElfFile *elf);
 uint16_t elf_hdr_get_shnum(ElfFile *elf);
 uint16_t elf_hdr_get_shstrndx(ElfFile *elf);
 
-/* Section header iteration */
+/* Section header table iteration */
 int	 sh_table_parse(ElfFile *elf);
 void sh_table_free(SectionHeaderTable *tbl);
 void sh_table_get_current(ElfFile *elf, SectionHeaderTableEntry *entry);
@@ -106,8 +106,10 @@ int	 sh_table_next(ElfFile *elf);
 void sh_table_reset(ElfFile *elf);
 int	 sh_table_has_more(ElfFile *elf);
 
-/* Section header getters */
+/* Section header table getters */
 int sh_table_get_entry_size(ElfFile *elf);
+int sh_table_get_symtab_header(ElfFile				   *elf,
+							   SectionHeaderTableEntry *symtab_header);
 
 /* Section header entry getters */
 uint32_t shtable_entry_get_name(SectionHeaderTableEntry *entry);
@@ -150,7 +152,7 @@ char		symtab_entry_get_nm_type(ElfFile *elf, SymbolTableEntry *entry);
 /* Symbol Linked List */
 SymbolList *symblst_new(void *addr, char *name, bool is_heap_allocated,
 						char digit);
-void		symblst_clear(SymbolList **lst, void (*del)(SymbolList *));
+void		symblst_clear(SymbolList **lst);
 void		symblst_add_back(SymbolList **lst, SymbolList *new);
 void		symblst_add_front(SymbolList **lst, SymbolList *new);
 SymbolList *symblst_last(SymbolList *lst);

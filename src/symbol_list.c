@@ -1,6 +1,6 @@
 #include "my_nm.h"
 
-SymbolList *symblst_new(void *addr, char *name, bool is_heap_allocated,
+SymbolList *symblst_new(unsigned int value, char *name, bool is_heap_allocated,
 						char digit) {
 	SymbolList *new;
 
@@ -9,7 +9,7 @@ SymbolList *symblst_new(void *addr, char *name, bool is_heap_allocated,
 		return (NULL);
 	*new = (SymbolList){
 		.digit = digit,
-		.addr = addr,
+		.value = value,
 		.name = name,
 		.heap_allocated = is_heap_allocated,
 		.next = NULL,
@@ -96,4 +96,40 @@ void symblst_foreach(SymbolList *lst, void (*f)(SymbolList *)) {
 		node = node->next;
 	}
 	return;
+}
+
+void symblst_sort(SymbolList **lst, int (*cmp)(SymbolList *, SymbolList *)) {
+	int			swapped;
+	SymbolList *a;
+	SymbolList *b;
+	SymbolList *prev;
+
+	if (!lst || !*lst || !cmp)
+		return;
+	swapped = 1;
+	while (swapped) {
+		swapped = 0;
+		prev = NULL;
+		a = *lst;
+		while (a->next) {
+			b = a->next;
+			if (cmp(a, b) > 0) {
+				a->next = b->next;
+				b->next = a;
+				if (prev)
+					prev->next = b;
+				else
+					*lst = b;
+				prev = b;
+				swapped = 1;
+			} else {
+				prev = a;
+				a = a->next;
+			}
+		}
+	}
+}
+
+int symblst_cmp_lexicographic(SymbolList *a, SymbolList *b) {
+	return (strcmp(a->name, b->name));
 }

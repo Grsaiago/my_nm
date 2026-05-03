@@ -1,34 +1,23 @@
 #include "my_nm.h"
-#include <elf.h>
+#include <stdio.h>
 
 int main(int argc, char **argv) {
-	ElfFile elf;
-	int		result;
+	ElfFile					elf;
+	SymbolTable				symtab;
+	SectionHeaderTableEntry symtab_header;
 
 	if (argc != 2) {
 		fprintf(stderr, "Usage: %s <elf_file>\n", argv[0]);
 		return (1);
 	}
 
-	/* Load the ELF file - this opens, mmaps, and parses everything */
-	result = elf_file_load(argv[1], &elf);
-	if (result != 0) {
+	// Load the ELF file - this opens, mmaps, and parses
+	// everything regarding the elf file
+	if (elf_file_load(argv[1], &elf) != 0) {
 		fprintf(stderr, "Error: Failed to load ELF file '%s'\n", argv[1]);
 		return (1);
 	}
 
-	/* Print ELF header information */
-	// elf_hdr_debug_print(&elf);
-	// printf("\n");
-
-	/* Example: Iterate through section headers */
-	// printf("Section Headers:\n");
-	sh_table_reset(&elf);
-
-	size_t					symtab_index = 0;
-	SectionHeaderTableEntry symtab_header;
-	SymbolTableEntry		symtab_entry;
-	SymbolTable				symtab;
 	if (sh_table_get_symtab_header(&elf, &symtab_header) != 0) {
 		return (-1);
 	}
@@ -36,15 +25,15 @@ int main(int argc, char **argv) {
 		printf("There is no symbol table in this ELF file");
 		return (-1);
 	}
-	for (; symtab_has_more(&symtab); symtab_next(&symtab), symtab_index++) {
-		symtab_get_current(&elf, &symtab, &symtab_entry);
-		// skip empty symbol or file symbol names
-		if (symtab_entry_get_name_index(&symtab_entry) == 0 ||
-			symtab_entry_get_type(&symtab_entry) == STT_FILE) {
-			continue;
+
+	for (SymbolList *curr_symbol = symtab.symlist; curr_symbol != NULL;
+		 curr_symbol = curr_symbol->next) {
+		if (curr_symbol->value == 0) {
+			printf("\t\t %c %s\n", curr_symbol->digit, curr_symbol->name);
+		} else {
+			printf("%016lx %c %s\n", (unsigned long)curr_symbol->value,
+				   curr_symbol->digit, curr_symbol->name);
 		}
-		printf("symbol: %s\n",
-			   symtab_entry_get_name_string(&elf, &symtab, &symtab_entry));
 	}
 	/* Clean up - unmaps memory and frees allocated resources */
 	elf_file_free(&elf);

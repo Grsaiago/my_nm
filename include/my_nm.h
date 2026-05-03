@@ -37,6 +37,20 @@ typedef struct section_header_table_entry {
 	} data;
 } SectionHeaderTableEntry;
 
+// TODO: make this into the return type for the sh_table_get_symtab_header
+// function as a newtype pattern
+typedef struct {
+	SectionHeaderTableEntry val;
+} SymbolSectionHeader;
+
+typedef struct symbol_list {
+	unsigned int		value;
+	char			   *name;
+	bool				heap_allocated;
+	char				digit;
+	struct symbol_list *next;
+} SymbolList;
+
 typedef struct symbol_table {
 	size_t					entry_count;
 	size_t					entry_size;
@@ -44,6 +58,7 @@ typedef struct symbol_table {
 	size_t					associated_strtab_offset;
 	size_t					current_index;
 	SectionHeaderTableEntry associated_strtab_section_header;
+	SymbolList			   *symlist;
 } SymbolTable;
 
 typedef struct symbol_table_entry {
@@ -63,14 +78,6 @@ typedef struct elf_file {
 	ElfHeader		   hdr;
 	SectionHeaderTable sh_table;
 } ElfFile;
-
-typedef struct symbol_list {
-	void			   *addr;
-	char			   *name;
-	bool				heap_allocated;
-	char				digit;
-	struct symbol_list *next;
-} SymbolList;
 
 /* ElfFile */
 int		 elf_file_load(char *path, ElfFile *elf);
@@ -135,12 +142,14 @@ void symtab_reset(SymbolTable *table);
 int	 symtab_has_more(SymbolTable *table);
 
 /* Symbol table entry getters */
-uint32_t symtab_entry_get_name_index(SymbolTableEntry *entry);
-uint64_t symtab_entry_get_value(SymbolTableEntry *entry);
-uint64_t symtab_entry_get_size(SymbolTableEntry *entry);
-uint8_t	 symtab_entry_get_info(SymbolTableEntry *entry);
-uint8_t	 symtab_entry_get_other(SymbolTableEntry *entry);
-uint16_t symtab_entry_get_shndx(SymbolTableEntry *entry);
+uint32_t	  symtab_entry_get_name_index(SymbolTableEntry *entry);
+uint64_t	  symtab_entry_get_value(SymbolTableEntry *entry);
+uint64_t	  symtab_entry_get_size(SymbolTableEntry *entry);
+uint8_t		  symtab_entry_get_info(SymbolTableEntry *entry);
+uint8_t		  symtab_entry_get_other(SymbolTableEntry *entry);
+uint16_t	  symtab_entry_get_shndx(SymbolTableEntry *entry);
+unsigned char symtab_entry_extract_st_bind(SymbolTableEntry *entry);
+unsigned char symtab_entry_extract_st_type(SymbolTableEntry *entry);
 
 /* Symbol table entry helper functions */
 uint8_t		symtab_entry_get_bind(SymbolTableEntry *entry);
@@ -150,7 +159,7 @@ const char *symtab_entry_get_name_string(ElfFile *elf, SymbolTable *table,
 char		symtab_entry_get_nm_type(ElfFile *elf, SymbolTableEntry *entry);
 
 /* Symbol Linked List */
-SymbolList *symblst_new(void *addr, char *name, bool is_heap_allocated,
+SymbolList *symblst_new(unsigned int value, char *name, bool is_heap_allocated,
 						char digit);
 void		symblst_clear(SymbolList **lst);
 void		symblst_add_back(SymbolList **lst, SymbolList *new);
@@ -158,5 +167,7 @@ void		symblst_add_front(SymbolList **lst, SymbolList *new);
 SymbolList *symblst_last(SymbolList *lst);
 int			symblst_size(SymbolList *lst);
 void		symblst_foreach(SymbolList *lst, void (*f)(SymbolList *));
+void symblst_sort(SymbolList **lst, int (*cmp)(SymbolList *, SymbolList *));
+int	 symblst_cmp_lexicographic(SymbolList *a, SymbolList *b);
 
 #endif // MY_NM

@@ -164,10 +164,10 @@ static int symtab_parse_symbol_list(ElfFile *elf, SymbolTable *symtab) {
 	symblst_sort(&symtab->symlist, symblst_cmp_lexicographic);
 	return (0);
 }
-
+// as per:
+// https://ftp.gnu.org/old-gnu/Manuals/binutils-2.12/html_node/binutils_4.html
 static char resolve_nm_char(ElfFile *elf, SymbolTableEntry *entry) {
 	SectionHeaderTableEntry associated_section;
-	unsigned char			chr = '?';
 	unsigned char			symbol_attribute_bind;
 	unsigned char			symbol_attribute_type;
 
@@ -181,64 +181,61 @@ static char resolve_nm_char(ElfFile *elf, SymbolTableEntry *entry) {
 	} else if (symbol_attribute_type == STT_GNU_IFUNC) {
 		return 'i';
 	}
+	// absolute symbols
+	else if (symtab_entry_get_shndx(entry) == SHN_ABS) {
+		return 'A';
+	}
 	// weak symbols are globals that provide a "default value"
 	// think of a library that has a default implementation of some func
 	// that the user can overwrite.
 	//
 	// We'll rule out all the STB_WEAK + SHN_UNDEF
 	else if (symbol_attribute_bind == STB_WEAK) {
-		chr = 'W'; // the weak symbol was defined
-		if (symtab_entry_get_shndx(entry) == SHN_UNDEF) {
-			chr = 'w'; // the symbol was not defined
+		// the weak symbols are either defined or not
+		if (symbol_attribute_type == STT_OBJECT) {
+			return symtab_entry_get_shndx(entry) != SHN_UNDEF ? 'V' : 'v';
 		}
-	} else if (symbol_attribute_bind == STB_WEAK &&
-			   symbol_attribute_type == STT_OBJECT) {
-		chr = 'V';
-		if (symtab_entry_get_shndx(entry) == SHN_UNDEF) {
-			chr = 'v';
-		}
-	} // any other SHN_UNDEF without a STB_WEAK is just an undefined symbol
+		return symtab_entry_get_shndx(entry) != SHN_UNDEF ? 'W' : 'w';
+	}
+	// After rulling out the STB_WEAK
+	// any other SHN_UNDEF is just an undefined symbol
 	else if (symtab_entry_get_shndx(entry) == SHN_UNDEF) {
-		chr = 'U';
-	} // absolute symbols
-	else if (symtab_entry_get_shndx(entry) == SHN_ABS) {
-		chr = 'A';
+		return 'U';
 	} // the symbol is in the .bss section
 	else if (shtable_entry_get_type(&associated_section) == SHT_NOBITS &&
 			 (shtable_entry_get_flags(&associated_section) &
 			  (SHF_ALLOC | SHF_WRITE)) == (SHF_ALLOC | SHF_WRITE)) {
-		chr = 'b';
+		return symbol_attribute_bind == STB_LOCAL ? 'b' : 'B';
 	} // the symbol is a common symbol
 	else if (symtab_entry_get_shndx(entry) == SHN_COMMON) {
-		chr = 'C';
-		if (symtab_entry_get_shndx(entry) == SHN_MIPS_SCOMMON) {
-			chr = 'c';
-		}
-	}
-	// same as the weak symbol logic, we'll eliminate all 't's
-	// before continuing to check for other SHT_PROGBITS combinations
+		// check it it's not a 'common small'
+		return symtab_entry_get_shndx(entry) != SHN_MIPS_SCOMMON ? 'C' : 'c';
+	} // if the symbol is on the .text
 	else if (shtable_entry_get_type(&associated_section) == SHT_PROGBITS &&
 			 (shtable_entry_get_flags(&associated_section) &
 			  (SHF_ALLOC | SHF_EXECINSTR)) == (SHF_ALLOC | SHF_EXECINSTR)) {
-		chr = 't';
+		return symbol_attribute_bind == STB_LOCAL ? 't' : 'T';
 	}
 	// initialized data section (.ctors, .data, .data1, .dtors).
 	// I don't check the SHT_PROGBITS because on
 	// trial and error testing that's what worked
 	else if ((shtable_entry_get_flags(&associated_section) &
 			  (SHF_ALLOC | SHF_WRITE)) == (SHF_ALLOC | SHF_WRITE)) {
-		chr = 'd';
+		return symbol_attribute_bind == STB_LOCAL ? 'd' : 'D';
 	}
-	// TODO 'N': Tem que reestruturar as structs pra poder
-	// cascatear a string table até aqui pra poder fazer um
-	// cmp com '.debug' e '.line'.
+	// if it exists on the program data
+	// and we don't have permission to write (read only)
 	else if ((shtable_entry_get_flags(&associated_section) & SHF_ALLOC) ==
-			 SHF_ALLOC) {
-		chr = 'r';
+				 SHF_ALLOC &&
+			 (shtable_entry_get_flags(&associated_section) & SHF_WRITE) !=
+				 SHF_WRITE) {
+		return symbol_attribute_bind == STB_LOCAL ? 'r' : 'R';
+	} // if it occupies space, but it's not used for anything in runtime, then
+	  // it's debugging
+	else if (shtable_entry_get_type(&associated_section) == SHT_PROGBITS &&
+			 (shtable_entry_get_flags(&associated_section) &
+			  (SHF_WRITE | SHF_ALLOC | SHF_EXECINSTR | SHF_MASKPROC)) == 0) {
+		return 'N';
 	}
-
-	if (symbol_attribute_bind == STB_GLOBAL && chr != '?') {
-		chr = toupper(chr);
-	}
-	return (chr);
+	return '?';
 }

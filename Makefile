@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -g -Wall -Wextra -Werror -Wpedantic -std=c99
+CFLAGS = -g -Wall -Wextra -Werror -Wpedantic -fstack-usage -std=c99
 INCLUDES = -I./include/
 TEST_INCLUDES = -lcriterion
 

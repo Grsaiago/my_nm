@@ -1,5 +1,4 @@
 #include "my_nm.h"
-#include <elf.h>
 
 /* Symbol Table Entry Getters */
 

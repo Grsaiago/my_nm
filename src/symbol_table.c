@@ -1,8 +1,4 @@
 #include "my_nm.h"
-#include <ctype.h>
-#include <elf.h>
-#include <stdint.h>
-#include <string.h>
 
 static int	symtab_parse_symbol_list(ElfFile *elf, SymbolTable *table);
 static char resolve_nm_char(ElfFile *elf, SymbolTableEntry *entry);
@@ -15,7 +11,7 @@ static char resolve_nm_char(ElfFile *elf, SymbolTableEntry *entry);
  * @param table Pointer to SymbolTable structure to initialize
  * @return 0 on success, -1 on error
  */
-int symtab_parse(ElfFile *elf, SectionHeaderTableEntry *symtab_section_header,
+int symtab_parse(ElfFile *elf, SymbolTableHeader *symtab_header,
 				 SymbolTable *table) {
 	uint64_t offset;
 	uint64_t size;
@@ -23,21 +19,18 @@ int symtab_parse(ElfFile *elf, SectionHeaderTableEntry *symtab_section_header,
 	uint32_t strtab_index;
 
 	/* Get symbol table properties */
-	offset = shtable_entry_get_offset(symtab_section_header);
-	size = shtable_entry_get_size(symtab_section_header);
-	entsize = shtable_entry_get_entsize(symtab_section_header);
+	offset = symtab_header_get_offset(symtab_header);
+	size = symtab_header_get_size(symtab_header);
+	entsize = symtab_header_get_entsize(symtab_header);
 
 	if (size == 0 || entsize == 0) {
 		return (-1);
 	}
 
 	/* Get the associated string table section header */
-	strtab_index = shtable_entry_get_link(symtab_section_header);
-	sh_table_get_at(elf, strtab_index,
-					&table->associated_strtab_section_header);
-
-	/* Verify it's actually a string table */
-	if (shtable_entry_get_type(&table->associated_strtab_section_header) !=
+	strtab_index = symtab_header_get_strtab_index(symtab_header);
+	sh_table_get_at(elf, strtab_index, &table->associated_strtab_header.val);
+	if (shtable_entry_get_type(&table->associated_strtab_header.val) !=
 		SHT_STRTAB) {
 		return (-1);
 	}
@@ -48,7 +41,8 @@ int symtab_parse(ElfFile *elf, SectionHeaderTableEntry *symtab_section_header,
 	table->table_start_offset = offset;
 	table->current_index = 0;
 	table->associated_strtab_offset =
-		shtable_entry_get_offset(&table->associated_strtab_section_header);
+		strtab_header_get_data_offset(&table->associated_strtab_header);
+	table->associated_symtab_header = *symtab_header;
 
 	symtab_parse_symbol_list(elf, table);
 	return (0);

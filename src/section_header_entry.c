@@ -1,5 +1,4 @@
 #include "my_nm.h"
-#include <elf.h>
 
 /**
  * @brief Get the section name index from a section header entry.

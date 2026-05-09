@@ -91,8 +91,7 @@ int sh_table_has_more(ElfFile *elf) {
 	return (elf->sh_table.current_index < elf->sh_table.entry_count);
 }
 
-int sh_table_get_symtab_header(ElfFile				   *elf,
-							   SectionHeaderTableEntry *symtab_header) {
+int sh_table_get_symtab_header(ElfFile *elf, SymbolTableHeader *symtab_header) {
 	int						section_header_index;
 	SectionHeaderTableEntry symtab_associated_strtab;
 	SectionHeaderTableEntry curr_header;
@@ -110,11 +109,11 @@ int sh_table_get_symtab_header(ElfFile				   *elf,
 		if (shtable_entry_get_type(&symtab_associated_strtab) != SHT_STRTAB) {
 			printf("O header na posição %d (sh_link da symtab), não é uma "
 				   "SHT_STRTAB",
-				   shtable_entry_get_link(symtab_header));
+				   shtable_entry_get_link(&curr_header));
 			return (-1);
 		}
 		break;
 	}
-	*symtab_header = curr_header;
+	symtab_header->val = curr_header;
 	return (0);
 }

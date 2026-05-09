@@ -37,11 +37,13 @@ typedef struct section_header_table_entry {
 	} data;
 } SectionHeaderTableEntry;
 
-// TODO: make this into the return type for the sh_table_get_symtab_header
-// function as a newtype pattern
 typedef struct {
 	SectionHeaderTableEntry val;
-} SymbolSectionHeader;
+} SymbolTableHeader;
+
+typedef struct {
+	SectionHeaderTableEntry val;
+} StringTableHeader;
 
 typedef struct symbol_list {
 	unsigned int		value;
@@ -52,13 +54,14 @@ typedef struct symbol_list {
 } SymbolList;
 
 typedef struct symbol_table {
-	size_t					entry_count;
-	size_t					entry_size;
-	size_t					table_start_offset;
-	size_t					associated_strtab_offset;
-	size_t					current_index;
-	SectionHeaderTableEntry associated_strtab_section_header;
-	SymbolList			   *symlist;
+	size_t			  entry_count;
+	size_t			  entry_size;
+	size_t			  table_start_offset;
+	size_t			  associated_strtab_offset;
+	size_t			  current_index;
+	SymbolList		 *symlist;
+	StringTableHeader associated_strtab_header;
+	SymbolTableHeader associated_symtab_header;
 } SymbolTable;
 
 typedef struct symbol_table_entry {
@@ -115,8 +118,18 @@ int	 sh_table_has_more(ElfFile *elf);
 
 /* Section header table getters */
 int sh_table_get_entry_size(ElfFile *elf);
-int sh_table_get_symtab_header(ElfFile				   *elf,
-							   SectionHeaderTableEntry *symtab_header);
+int sh_table_get_symtab_header(ElfFile *elf, SymbolTableHeader *symtab_header);
+
+/* SymbolTableHeader specialized functions */
+uint32_t symtab_header_get_strtab_index(SymbolTableHeader *header);
+uint64_t symtab_header_get_offset(SymbolTableHeader *header);
+uint64_t symtab_header_get_size(SymbolTableHeader *header);
+uint64_t symtab_header_get_entsize(SymbolTableHeader *header);
+
+/* StringTableHeader specialized functions */
+uint64_t	strtab_header_get_data_offset(StringTableHeader *header);
+const char *strtab_header_get_string_at(ElfFile *elf, StringTableHeader *header,
+										uint32_t name_index);
 
 /* Section header entry getters */
 uint32_t shtable_entry_get_name(SectionHeaderTableEntry *entry);
@@ -131,7 +144,7 @@ uint64_t shtable_entry_get_addralign(SectionHeaderTableEntry *entry);
 uint64_t shtable_entry_get_entsize(SectionHeaderTableEntry *entry);
 
 /* Symbol table iteration */
-int	 symtab_parse(ElfFile *elf, SectionHeaderTableEntry *symtab_section,
+int	 symtab_parse(ElfFile *elf, SymbolTableHeader *symtab_header,
 				  SymbolTable *table);
 void symtab_get_current(ElfFile *elf, SymbolTable *table,
 						SymbolTableEntry *entry);

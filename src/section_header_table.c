@@ -9,11 +9,11 @@ int sh_table_parse(ElfFile *elf) {
 		return (-1);
 	}
 
-	elf->sh_table = (SectionHeaderTable) {
-	    .entry_size = elf_hdr_get_shentsize(elf),
-	    .entry_count = elf_hdr_get_shnum(elf),
-	    .current_index = 0,
-	    .table_start_offset = shoff,
+	elf->sh_table = (SectionHeaderTable){
+		.entry_size = elf_hdr_get_shentsize(elf),
+		.entry_count = elf_hdr_get_shnum(elf),
+		.current_index = 0,
+		.table_start_offset = shoff,
 	};
 	return (0);
 }
@@ -24,7 +24,8 @@ int sh_table_parse(ElfFile *elf) {
  * @brief Get the current section header.
  *
  * @param elf Pointer to ElfFile
- * @return Pointer to current section header (Elf32_Shdr* or Elf64_Shdr*), or NULL
+ * @return Pointer to current section header (Elf32_Shdr* or Elf64_Shdr*), or
+ * NULL
  */
 void sh_table_get_current(ElfFile *elf, SectionHeaderTableEntry *entry) {
 	sh_table_get_at(elf, elf->sh_table.current_index, entry);
@@ -38,21 +39,22 @@ void sh_table_get_current(ElfFile *elf, SectionHeaderTableEntry *entry) {
  * @param index Index of the section header
  * @return Pointer to section header (Elf32_Shdr* or Elf64_Shdr*), or NULL
  */
-void sh_table_get_at(ElfFile *elf, size_t index, SectionHeaderTableEntry *entry) {
+void sh_table_get_at(ElfFile *elf, size_t index,
+					 SectionHeaderTableEntry *entry) {
 	switch (elf_get_arch_type(elf)) {
 	case (BITS_32):
 		entry->type = BITS_32;
 		memcpy(&entry->data.s32,
-		       (elf->file_data.data + elf_hdr_get_shoff(elf)) +
-		           (index * elf->sh_table.entry_size),
-		       sizeof(Elf32_Shdr));
+			   (elf->file_data.data + elf_hdr_get_shoff(elf)) +
+				   (index * elf->sh_table.entry_size),
+			   sizeof(Elf32_Shdr));
 		break;
 	case (BITS_64):
 		entry->type = BITS_64;
 		memcpy(&entry->data.s64,
-		       (elf->file_data.data + elf_hdr_get_shoff(elf)) +
-		           (index * elf->sh_table.entry_size),
-		       sizeof(Elf64_Shdr));
+			   (elf->file_data.data + elf_hdr_get_shoff(elf)) +
+				   (index * elf->sh_table.entry_size),
+			   sizeof(Elf64_Shdr));
 		break;
 	}
 	return;
@@ -77,9 +79,7 @@ int sh_table_next(ElfFile *elf) {
  *
  * @param elf Pointer to ElfFile
  */
-void sh_table_reset(ElfFile *elf) {
-	elf->sh_table.current_index = 0;
-}
+void sh_table_reset(ElfFile *elf) { elf->sh_table.current_index = 0; }
 
 /**
  * @brief Check if there are more section headers to iterate over.
@@ -89,4 +89,31 @@ void sh_table_reset(ElfFile *elf) {
  */
 int sh_table_has_more(ElfFile *elf) {
 	return (elf->sh_table.current_index < elf->sh_table.entry_count);
+}
+
+int sh_table_get_symtab_header(ElfFile *elf, SymbolTableHeader *symtab_header) {
+	int						section_header_index;
+	SectionHeaderTableEntry symtab_associated_strtab;
+	SectionHeaderTableEntry curr_header;
+
+	section_header_index = 0;
+	for (; sh_table_has_more(elf); sh_table_next(elf), section_header_index++) {
+		sh_table_get_current(elf, &curr_header);
+		if (shtable_entry_get_type(&curr_header) != SHT_SYMTAB) {
+			continue;
+		}
+		// get the strtab section header associated with that symtab via the
+		// sh_link property as per docs and do a sanity check on it's type.
+		sh_table_get_at(elf, shtable_entry_get_link(&curr_header),
+						&symtab_associated_strtab);
+		if (shtable_entry_get_type(&symtab_associated_strtab) != SHT_STRTAB) {
+			printf("O header na posição %d (sh_link da symtab), não é uma "
+				   "SHT_STRTAB",
+				   shtable_entry_get_link(&curr_header));
+			return (-1);
+		}
+		break;
+	}
+	symtab_header->val = curr_header;
+	return (0);
 }

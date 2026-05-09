@@ -1,62 +1,53 @@
 #include "my_nm.h"
-#include <elf.h>
+#include <stdio.h>
 
 int main(int argc, char **argv) {
-	ElfFile elf;
-	int     result;
+	ElfFile			  elf;
+	SymbolTable		  symtab;
+	SymbolTableHeader symtab_header;
 
-	if (argc != 2) {
-		fprintf(stderr, "Usage: %s <elf_file>\n", argv[0]);
+	if (argc < 2) {
+		printf("Usage: %s <elf_file>\n", argv[0]);
 		return (1);
 	}
 
-	/* Load the ELF file - this opens, mmaps, and parses everything */
-	result = elf_file_load(argv[1], &elf);
-	if (result != 0) {
-		fprintf(stderr, "Error: Failed to load ELF file '%s'\n", argv[1]);
-		return (1);
-	}
-
-	/* Print ELF header information */
-	// elf_hdr_debug_print(&elf);
-	// printf("\n");
-
-	/* Example: Iterate through section headers */
-	// printf("Section Headers:\n");
-	sh_table_reset(&elf);
-
-	size_t                  section_header_index = 0;
-	size_t                  symtab_index = 0;
-	SectionHeaderTableEntry current_header;
-	SectionHeaderTableEntry symtab_header;
-	SectionHeaderTableEntry associated_str_tab;
-	SymbolTableEntry        symtab_entry;
-	SymbolTable             symtab;
-	for (; sh_table_has_more(&elf); sh_table_next(&elf), section_header_index++) {
-		sh_table_get_current(&elf, &current_header);
-		if (shtable_entry_get_type(&current_header) != SHT_SYMTAB) {
+	for (int arg_idx = 1; arg_idx < argc; arg_idx++) {
+		// Load the ELF file - this opens, mmaps, and parses
+		// everything regarding the elf file
+		if (elf_file_load(argv[arg_idx], &elf) != 0) {
+			printf("%s failed to load ELF file '%s', are you sure it's an "
+				   "ELF file?\n",
+				   argv[0], argv[arg_idx]);
 			continue;
 		}
-		symtab_header = current_header;
-		sh_table_get_at(&elf, shtable_entry_get_link(&symtab_header), &associated_str_tab);
-		if (shtable_entry_get_type(&associated_str_tab) != SHT_STRTAB) {
-			printf("O header na posição %d (sh_link da symtab), não é uma "
-			       "SHT_STRTAB",
-			       shtable_entry_get_link(&symtab_header));
+
+		if (sh_table_get_symtab_header(&elf, &symtab_header) != 0) {
+			printf("%s: %s: no symbol table\n", argv[0], argv[arg_idx]);
+			continue;
+		}
+		if (symtab_parse(&elf, &symtab_header, &symtab) != 0) {
+			printf("%s: %s: no string table, that's a stripped binary\n",
+				   argv[0], argv[arg_idx]);
+			continue;
 		}
 
-		symtab_parse(&elf, &symtab_header, &symtab);
-		for (; symtab_has_more(&symtab); symtab_next(&symtab), symtab_index++) {
-			symtab_get_current(&elf, &symtab, &symtab_entry);
-			// skip empty symbol or file symbol names
-			if (symtab_entry_get_name_index(&symtab_entry) == 0 || symtab_entry_get_type(&symtab_entry) == STT_FILE) {
-				continue;
+		printf("%s:\n", argv[arg_idx]);
+		for (SymbolList *curr_symbol = symtab.symlist; curr_symbol != NULL;
+			 curr_symbol = curr_symbol->next) {
+			if (curr_symbol->value == 0) {
+				printf("\t\t %c %s\n", curr_symbol->digit, curr_symbol->name);
+			} else {
+				printf("%016lx %c %s\n", (unsigned long)curr_symbol->value,
+					   curr_symbol->digit, curr_symbol->name);
 			}
-			printf("symbol: %s\n", symtab_entry_get_name_string(&elf, &symtab, &symtab_entry));
+		}
+		/* Clean up - unmaps memory and frees allocated resources */
+		symblst_clear(&symtab.symlist);
+		elf_file_free(&elf);
+		if (argv[arg_idx + 1] != NULL) {
+			printf("\n");
 		}
 	}
-	/* Clean up - unmaps memory and frees allocated resources */
-	elf_file_free(&elf);
 
 	return (0);
 }

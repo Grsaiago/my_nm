@@ -14,9 +14,9 @@
  * @see elf_file_free
  */
 int elf_file_load(char *path, ElfFile *elf) {
-	void       *file_data;
+	void	   *file_data;
 	struct stat file_metadata;
-	int         fd;
+	int			fd;
 
 	memset(elf, 0, sizeof(ElfFile));
 
@@ -30,7 +30,8 @@ int elf_file_load(char *path, ElfFile *elf) {
 		return (-1);
 	}
 
-	file_data = mmap(NULL, file_metadata.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+	file_data =
+		mmap(NULL, file_metadata.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
 	close(fd);
 
 	if (file_data == MAP_FAILED) {

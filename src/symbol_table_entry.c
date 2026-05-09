@@ -1,5 +1,4 @@
 #include "my_nm.h"
-#include <elf.h>
 
 /* Symbol Table Entry Getters */
 
@@ -171,6 +170,28 @@ uint8_t symtab_entry_get_type(SymbolTableEntry *entry) {
  * @param entry Pointer to SymbolTableEntry
  * @return Pointer to the null-terminated symbol name string
  */
-const char *symtab_entry_get_name_string(ElfFile *elf, SymbolTable *table, SymbolTableEntry *entry) {
-	return (elf->file_data.data + table->associated_strtab_offset + symtab_entry_get_name_index(entry));
+const char *symtab_entry_get_name_string(ElfFile *elf, SymbolTable *table,
+										 SymbolTableEntry *entry) {
+	return (elf->file_data.data + table->associated_strtab_offset +
+			symtab_entry_get_name_index(entry));
+}
+
+unsigned char symtab_entry_extract_st_bind(SymbolTableEntry *entry) {
+	switch (entry->type) {
+	case BITS_32:
+		return ELF64_ST_BIND(entry->data.s32.st_info);
+	case BITS_64:
+		return ELF32_ST_BIND(entry->data.s64.st_info);
+	}
+	return (0);
+}
+
+unsigned char symtab_entry_extract_st_type(SymbolTableEntry *entry) {
+	switch (entry->type) {
+	case BITS_32:
+		return ELF64_ST_TYPE(entry->data.s32.st_info);
+	case BITS_64:
+		return ELF32_ST_TYPE(entry->data.s64.st_info);
+	}
+	return (0);
 }

@@ -2,9 +2,11 @@
 #define MY_NM
 
 #include <elf.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,19 +19,31 @@ typedef enum arch_type {
 	BITS_64,
 } ArchType;
 
-typedef struct object_file {
-	char  *data;
-	size_t size;
-} ObjectFile;
+/* File */
+typedef struct {
+	char		 *data;
+	unsigned long size;
+} MappedFile;
 
-typedef struct section_header_table {
-	size_t entry_size;
-	size_t entry_count;
-	size_t table_start_offset;
-	size_t current_index;
-} SectionHeaderTable;
+typedef struct {
+	ArchType type;
+	union {
+		Elf32_Ehdr t32;
+		Elf64_Ehdr t64;
+	} header;
+	char		 *data;
+	unsigned long size;
+} ElfFile;
 
-typedef struct section_header_table_entry {
+/* Section Header */
+typedef struct {
+	ArchType type;
+	char	*start;
+	int32_t	 idx;
+	uint32_t size;
+} SectionHeaderTableIterator;
+
+typedef struct {
 	ArchType type;
 	union {
 		Elf32_Shdr s32;
@@ -45,26 +59,15 @@ typedef struct {
 	SectionHeaderTableEntry val;
 } StringTableHeader;
 
-typedef struct symbol_list {
-	unsigned int		value;
-	char			   *name;
-	bool				heap_allocated;
-	char				digit;
-	struct symbol_list *next;
-} SymbolList;
+/* Symbol Table */
+typedef struct {
+	ArchType type;
+	char	*start;
+	int32_t	 idx;
+	uint32_t size;
+} SymbolTableIterator;
 
-typedef struct symbol_table {
-	size_t			  entry_count;
-	size_t			  entry_size;
-	size_t			  table_start_offset;
-	size_t			  associated_strtab_offset;
-	size_t			  current_index;
-	SymbolList		 *symlist;
-	StringTableHeader associated_strtab_header;
-	SymbolTableHeader associated_symtab_header;
-} SymbolTable;
-
-typedef struct symbol_table_entry {
+typedef struct {
 	ArchType type;
 	union {
 		Elf32_Sym s32;
@@ -72,53 +75,50 @@ typedef struct symbol_table_entry {
 	} data;
 } SymbolTableEntry;
 
-typedef struct elf_header {
-	char data[sizeof(Elf64_Ehdr)];
-} ElfHeader;
+/* String Table */
+typedef struct {
+	char	*data;
+	uint32_t size;
+} StringTable;
 
-typedef struct elf_file {
-	ObjectFile		   file_data;
-	ElfHeader		   hdr;
-	SectionHeaderTable sh_table;
-} ElfFile;
+/* Symbol List */
+typedef struct symbol_list {
+	unsigned int		value;
+	char			   *name;
+	char				digit;
+	struct symbol_list *next;
+} SymbolList;
+
+/* File load */
+int	 map_file(const char *filename, MappedFile *file);
+void unmap_file(MappedFile *file);
 
 /* ElfFile */
-int		 elf_file_load(char *path, ElfFile *elf);
+int		 new_elf_file(MappedFile *file, ElfFile *elf);
 void	 elf_file_free(ElfFile *elf);
-ArchType elf_get_arch_type(ElfFile *elf);
+uint64_t elf_get_shoff(ElfFile *elf);
+int		 elf_get_shnum(ElfFile *elf);
 
-/* ELF header */
-int	 elf_hdr_parse(ElfFile *elf);
-void elf_hdr_debug_print(ElfFile *elf);
+/* SectionHeaderTableIterator */
+SectionHeaderTableIterator get_section_header_table_it(ElfFile *elf);
+int32_t					   sh_table_it_reset(SectionHeaderTableIterator *it);
+int						   sh_table_it_has_next(SectionHeaderTableIterator *it);
+int						   sh_table_it_next(SectionHeaderTableIterator *it,
+											SectionHeaderTableEntry	   *value);
+int sh_table_it_get_at(SectionHeaderTableIterator *it, uint32_t index,
+					   SectionHeaderTableEntry *entry);
+int sh_table_it_get_symbol_and_associated_string_table(
+	SectionHeaderTableIterator *it, SymbolTableHeader *symtab,
+	StringTableHeader *strtab);
 
-/* ELF header getters */
-uint16_t elf_hdr_get_type(ElfFile *elf);
-uint16_t elf_hdr_get_machine(ElfFile *elf);
-uint32_t elf_hdr_version(ElfFile *elf);
-uint64_t elf_hdr_get_entry(ElfFile *elf);
-uint64_t elf_hdr_get_phoff(ElfFile *elf);
-uint64_t elf_hdr_get_shoff(ElfFile *elf);
-uint32_t elf_hdr_get_flags(ElfFile *elf);
-uint16_t elf_hdr_get_ehsize(ElfFile *elf);
-uint16_t elf_hdr_get_phentsize(ElfFile *elf);
-uint16_t elf_hdr_get_phnum(ElfFile *elf);
-uint16_t elf_hdr_get_shentsize(ElfFile *elf);
-uint16_t elf_hdr_get_shnum(ElfFile *elf);
-uint16_t elf_hdr_get_shstrndx(ElfFile *elf);
-
-/* Section header table iteration */
-int	 sh_table_parse(ElfFile *elf);
-void sh_table_free(SectionHeaderTable *tbl);
-void sh_table_get_current(ElfFile *elf, SectionHeaderTableEntry *entry);
-void sh_table_get_at(ElfFile *elf, size_t index,
-					 SectionHeaderTableEntry *entry);
-int	 sh_table_next(ElfFile *elf);
-void sh_table_reset(ElfFile *elf);
-int	 sh_table_has_more(ElfFile *elf);
-
-/* Section header table getters */
-int sh_table_get_entry_size(ElfFile *elf);
-int sh_table_get_symtab_header(ElfFile *elf, SymbolTableHeader *symtab_header);
+/* Section header entry getters */
+uint32_t shtable_entry_get_name(SectionHeaderTableEntry *entry);
+uint32_t shtable_entry_get_type(SectionHeaderTableEntry *entry);
+uint64_t shtable_entry_get_flags(SectionHeaderTableEntry *entry);
+uint64_t shtable_entry_get_offset(SectionHeaderTableEntry *entry);
+uint64_t shtable_entry_get_size(SectionHeaderTableEntry *entry);
+uint32_t shtable_entry_get_link(SectionHeaderTableEntry *entry);
+uint64_t shtable_entry_get_entsize(SectionHeaderTableEntry *entry);
 
 /* SymbolTableHeader specialized functions */
 uint32_t symtab_header_get_strtab_index(SymbolTableHeader *header);
@@ -126,60 +126,32 @@ uint64_t symtab_header_get_offset(SymbolTableHeader *header);
 uint64_t symtab_header_get_size(SymbolTableHeader *header);
 uint64_t symtab_header_get_entsize(SymbolTableHeader *header);
 
-/* StringTableHeader specialized functions */
-uint64_t	strtab_header_get_data_offset(StringTableHeader *header);
-const char *strtab_header_get_string_at(ElfFile *elf, StringTableHeader *header,
-										uint32_t name_index);
-
-/* Section header entry getters */
-uint32_t shtable_entry_get_name(SectionHeaderTableEntry *entry);
-uint32_t shtable_entry_get_type(SectionHeaderTableEntry *entry);
-uint64_t shtable_entry_get_flags(SectionHeaderTableEntry *entry);
-uint64_t shtable_entry_get_addr(SectionHeaderTableEntry *entry);
-uint64_t shtable_entry_get_offset(SectionHeaderTableEntry *entry);
-uint64_t shtable_entry_get_size(SectionHeaderTableEntry *entry);
-uint32_t shtable_entry_get_link(SectionHeaderTableEntry *entry);
-uint32_t shtable_entry_get_info(SectionHeaderTableEntry *entry);
-uint64_t shtable_entry_get_addralign(SectionHeaderTableEntry *entry);
-uint64_t shtable_entry_get_entsize(SectionHeaderTableEntry *entry);
-
-/* Symbol table iteration */
-int	 symtab_parse(ElfFile *elf, SymbolTableHeader *symtab_header,
-				  SymbolTable *table);
-void symtab_get_current(ElfFile *elf, SymbolTable *table,
-						SymbolTableEntry *entry);
-void symtab_get_at(ElfFile *elf, SymbolTable *table, size_t index,
-				   SymbolTableEntry *entry);
-int	 symtab_next(SymbolTable *table);
-void symtab_reset(SymbolTable *table);
-int	 symtab_has_more(SymbolTable *table);
+/* SymbolTableIterator */
+SymbolTableIterator get_symbol_table_it(ElfFile			  *elf,
+										SymbolTableHeader *symtab_header);
+int symbol_table_it_next(SymbolTableIterator *it, SymbolTableEntry *value);
+int symbol_table_it_has_next(SymbolTableIterator *it);
 
 /* Symbol table entry getters */
 uint32_t	  symtab_entry_get_name_index(SymbolTableEntry *entry);
 uint64_t	  symtab_entry_get_value(SymbolTableEntry *entry);
-uint64_t	  symtab_entry_get_size(SymbolTableEntry *entry);
 uint8_t		  symtab_entry_get_info(SymbolTableEntry *entry);
-uint8_t		  symtab_entry_get_other(SymbolTableEntry *entry);
 uint16_t	  symtab_entry_get_shndx(SymbolTableEntry *entry);
 unsigned char symtab_entry_extract_st_bind(SymbolTableEntry *entry);
 unsigned char symtab_entry_extract_st_type(SymbolTableEntry *entry);
+uint8_t		  symtab_entry_get_type(SymbolTableEntry *entry);
+const char	 *symtab_entry_get_name_string(SymbolTableEntry *entry,
+										   StringTable		*strtab);
 
-/* Symbol table entry helper functions */
-uint8_t		symtab_entry_get_bind(SymbolTableEntry *entry);
-uint8_t		symtab_entry_get_type(SymbolTableEntry *entry);
-const char *symtab_entry_get_name_string(ElfFile *elf, SymbolTable *table,
-										 SymbolTableEntry *entry);
-char		symtab_entry_get_nm_type(ElfFile *elf, SymbolTableEntry *entry);
+/* StringTable */
+StringTable get_string_table(ElfFile *elf, StringTableHeader *header);
 
-/* Symbol Linked List */
-SymbolList *symblst_new(unsigned int value, char *name, bool is_heap_allocated,
-						char digit);
+/* SymbolList */
+SymbolList *symblst_parse(SectionHeaderTableIterator *shdr_it,
+						  SymbolTableIterator *symtab_it, StringTable *strtab);
+SymbolList *symblst_new(unsigned int value, char *name, char digit);
 void		symblst_clear(SymbolList **lst);
 void		symblst_add_back(SymbolList **lst, SymbolList *new);
-void		symblst_add_front(SymbolList **lst, SymbolList *new);
-SymbolList *symblst_last(SymbolList *lst);
-int			symblst_size(SymbolList *lst);
-void		symblst_foreach(SymbolList *lst, void (*f)(SymbolList *));
 void symblst_sort(SymbolList **lst, int (*cmp)(SymbolList *, SymbolList *));
 int	 symblst_cmp_lexicographic(SymbolList *a, SymbolList *b);
 

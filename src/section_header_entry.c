@@ -61,27 +61,6 @@ uint64_t shtable_entry_get_flags(SectionHeaderTableEntry *entry) {
 }
 
 /**
- * @brief Get the section virtual address from a section header entry.
- *
- * If the section appears in the memory image of a process, this member
- * gives the address at which the section's first byte should reside.
- * Otherwise, the member contains 0.
- *
- * @param entry Pointer to the SectionHeaderTableEntry
- * @return The section virtual address (sh_addr field)
- */
-uint64_t shtable_entry_get_addr(SectionHeaderTableEntry *entry) {
-	switch (entry->type) {
-	case BITS_32:
-		return (entry->data.s32.sh_addr);
-	case BITS_64:
-		return (entry->data.s64.sh_addr);
-	default:
-		return (0);
-	}
-}
-
-/**
  * @brief Get the section file offset from a section header entry.
  *
  * Returns the byte offset from the beginning of the file to the first
@@ -136,49 +115,6 @@ uint32_t shtable_entry_get_link(SectionHeaderTableEntry *entry) {
 		return (entry->data.s32.sh_link);
 	case BITS_64:
 		return (entry->data.s64.sh_link);
-	default:
-		return (0);
-	}
-}
-
-/**
- * @brief Get the section info from a section header entry.
- *
- * This member holds extra information, whose interpretation depends on
- * the section type.
- *
- * @param entry Pointer to the SectionHeaderTableEntry
- * @return The section info (sh_info field)
- */
-uint32_t shtable_entry_get_info(SectionHeaderTableEntry *entry) {
-	switch (entry->type) {
-	case BITS_32:
-		return (entry->data.s32.sh_info);
-	case BITS_64:
-		return (entry->data.s64.sh_info);
-	default:
-		return (0);
-	}
-}
-
-/**
- * @brief Get the section address alignment from a section header entry.
- *
- * Some sections have address alignment constraints. If a section holds a
- * doubleword, the system must ensure doubleword alignment for the entire
- * section. The value of sh_addr must be congruent to 0, modulo the value
- * of sh_addralign. Only 0 and positive integral powers of two are allowed.
- * Values 0 and 1 mean the section has no alignment constraints.
- *
- * @param entry Pointer to the SectionHeaderTableEntry
- * @return The section address alignment (sh_addralign field)
- */
-uint64_t shtable_entry_get_addralign(SectionHeaderTableEntry *entry) {
-	switch (entry->type) {
-	case BITS_32:
-		return (entry->data.s32.sh_addralign);
-	case BITS_64:
-		return (entry->data.s64.sh_addralign);
 	default:
 		return (0);
 	}

@@ -41,26 +41,6 @@ uint64_t symtab_entry_get_value(SymbolTableEntry *entry) {
 }
 
 /**
- * @brief Get the symbol size from a symbol table entry.
- *
- * Many symbols have associated sizes. Returns zero if the symbol has
- * no size or an unknown size.
- *
- * @param entry Pointer to SymbolTableEntry
- * @return The symbol size (st_size field)
- */
-uint64_t symtab_entry_get_size(SymbolTableEntry *entry) {
-	switch (entry->type) {
-	case BITS_32:
-		return (entry->data.s32.st_size);
-	case BITS_64:
-		return (entry->data.s64.st_size);
-	default:
-		return (0);
-	}
-}
-
-/**
  * @brief Get the symbol info from a symbol table entry.
  *
  * This specifies the symbol's type and binding attributes.
@@ -120,26 +100,6 @@ uint16_t symtab_entry_get_shndx(SymbolTableEntry *entry) {
 /* Symbol Table Entry Helper Functions */
 
 /**
- * @brief Get the symbol binding from a symbol table entry.
- *
- * Extracts the binding (STB_LOCAL, STB_GLOBAL, STB_WEAK) from st_info.
- *
- * @param entry Pointer to SymbolTableEntry
- * @return The symbol binding
- */
-uint8_t symtab_entry_get_bind(SymbolTableEntry *entry) {
-	uint8_t info = symtab_entry_get_info(entry);
-	switch (entry->type) {
-	case BITS_32:
-		return (ELF32_ST_BIND(info));
-	case BITS_64:
-		return (ELF64_ST_BIND(info));
-	default:
-		return (0);
-	}
-}
-
-/**
  * @brief Get the symbol type from a symbol table entry.
  *
  * Extracts the type (STT_NOTYPE, STT_OBJECT, STT_FUNC, etc.) from st_info.
@@ -170,10 +130,9 @@ uint8_t symtab_entry_get_type(SymbolTableEntry *entry) {
  * @param entry Pointer to SymbolTableEntry
  * @return Pointer to the null-terminated symbol name string
  */
-const char *symtab_entry_get_name_string(ElfFile *elf, SymbolTable *table,
-										 SymbolTableEntry *entry) {
-	return (elf->file_data.data + table->associated_strtab_offset +
-			symtab_entry_get_name_index(entry));
+const char *symtab_entry_get_name_string(SymbolTableEntry *entry,
+										 StringTable	  *strtab) {
+	return (&strtab->data[symtab_entry_get_name_index(entry)]);
 }
 
 unsigned char symtab_entry_extract_st_bind(SymbolTableEntry *entry) {

@@ -1,4 +1,4 @@
-CC = gcc
+CC = clang
 CFLAGS = -g -Wall -Wextra -Werror -Wpedantic -fstack-usage -std=c99
 INCLUDES = -I./include/
 TEST_INCLUDES = -lcriterion
@@ -22,7 +22,7 @@ LIB_OBJS = $(filter-out $(OBJ_DIR)/main.o,$(OBJS))
 all: help
 
 $(NAME): $(OBJS)
-	$(CC) $(OBJS) -o $(NAME)
+	$(CC) $(CFLAGS) $(OBJS) -o $(NAME)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@

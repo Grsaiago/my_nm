@@ -1,6 +1,8 @@
 #ifndef MY_NM
 #define MY_NM
 
+#include "libft.h"
+
 #include <elf.h>
 #include <errno.h>
 #include <fcntl.h>

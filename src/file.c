@@ -9,22 +9,18 @@ int map_file(const char *filename, MappedFile *file) {
 
 	fd = open(filename, O_RDONLY);
 	if (fd == -1) {
-		printf("error on opening file: %s", strerror(errno));
+		ft_printf("error on opening file: %s", strerror(errno));
 		return (-1);
 	}
 
 	if (fstat(fd, &file_info) != 0) {
-		printf("error on fstat: %s", strerror(errno));
-		return (-1);
-	}
-	if (lseek(fd, 0, SEEK_SET) != 0) {
-		printf("error on lseek: %s", strerror(errno));
+		ft_printf("error on fstat: %s", strerror(errno));
 		return (-1);
 	}
 
 	elf_data = mmap(NULL, file_info.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
 	if (elf_data == NULL) {
-		printf("error on mmap: %s", strerror(errno));
+		ft_printf("error on mmap: %s", strerror(errno));
 		return (-1);
 	}
 

@@ -1,38 +1,212 @@
 [
   {
     "arguments": [
-      "/usr/bin/gcc",
+      "/usr/bin/clang",
+      "-g",
       "-Wall",
       "-Wextra",
       "-Werror",
       "-Wpedantic",
+      "-fstack-usage",
       "-std=c99",
       "-I./include/",
+      "-I./libft",
       "-c",
       "-o",
-      "objs/elf_header.o",
-      "src/elf_header.c"
+      "objs/elf.o",
+      "src/elf.c"
     ],
     "directory": "/home/gsaiago/estudo/c/my_nm",
-    "file": "/home/gsaiago/estudo/c/my_nm/src/elf_header.c",
-    "output": "/home/gsaiago/estudo/c/my_nm/objs/elf_header.o"
+    "file": "/home/gsaiago/estudo/c/my_nm/src/elf.c",
+    "output": "/home/gsaiago/estudo/c/my_nm/objs/elf.o"
   },
   {
     "arguments": [
-      "/usr/bin/gcc",
+      "/usr/bin/clang",
+      "-g",
       "-Wall",
       "-Wextra",
       "-Werror",
       "-Wpedantic",
+      "-fstack-usage",
       "-std=c99",
       "-I./include/",
+      "-I./libft",
       "-c",
       "-o",
-      "objs/section_header.o",
-      "src/section_header.c"
+      "objs/file.o",
+      "src/file.c"
     ],
     "directory": "/home/gsaiago/estudo/c/my_nm",
-    "file": "/home/gsaiago/estudo/c/my_nm/src/section_header.c",
-    "output": "/home/gsaiago/estudo/c/my_nm/objs/section_header.o"
+    "file": "/home/gsaiago/estudo/c/my_nm/src/file.c",
+    "output": "/home/gsaiago/estudo/c/my_nm/objs/file.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang",
+      "-g",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Wpedantic",
+      "-fstack-usage",
+      "-std=c99",
+      "-I./include/",
+      "-I./libft",
+      "-c",
+      "-o",
+      "objs/main.o",
+      "src/main.c"
+    ],
+    "directory": "/home/gsaiago/estudo/c/my_nm",
+    "file": "/home/gsaiago/estudo/c/my_nm/src/main.c",
+    "output": "/home/gsaiago/estudo/c/my_nm/objs/main.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang",
+      "-g",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Wpedantic",
+      "-fstack-usage",
+      "-std=c99",
+      "-I./include/",
+      "-I./libft",
+      "-c",
+      "-o",
+      "objs/section_header_entry.o",
+      "src/section_header_entry.c"
+    ],
+    "directory": "/home/gsaiago/estudo/c/my_nm",
+    "file": "/home/gsaiago/estudo/c/my_nm/src/section_header_entry.c",
+    "output": "/home/gsaiago/estudo/c/my_nm/objs/section_header_entry.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang",
+      "-g",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Wpedantic",
+      "-fstack-usage",
+      "-std=c99",
+      "-I./include/",
+      "-I./libft",
+      "-c",
+      "-o",
+      "objs/section_header_table_it.o",
+      "src/section_header_table_it.c"
+    ],
+    "directory": "/home/gsaiago/estudo/c/my_nm",
+    "file": "/home/gsaiago/estudo/c/my_nm/src/section_header_table_it.c",
+    "output": "/home/gsaiago/estudo/c/my_nm/objs/section_header_table_it.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang",
+      "-g",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Wpedantic",
+      "-fstack-usage",
+      "-std=c99",
+      "-I./include/",
+      "-I./libft",
+      "-c",
+      "-o",
+      "objs/string_table.o",
+      "src/string_table.c"
+    ],
+    "directory": "/home/gsaiago/estudo/c/my_nm",
+    "file": "/home/gsaiago/estudo/c/my_nm/src/string_table.c",
+    "output": "/home/gsaiago/estudo/c/my_nm/objs/string_table.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang",
+      "-g",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Wpedantic",
+      "-fstack-usage",
+      "-std=c99",
+      "-I./include/",
+      "-I./libft",
+      "-c",
+      "-o",
+      "objs/symbol_list.o",
+      "src/symbol_list.c"
+    ],
+    "directory": "/home/gsaiago/estudo/c/my_nm",
+    "file": "/home/gsaiago/estudo/c/my_nm/src/symbol_list.c",
+    "output": "/home/gsaiago/estudo/c/my_nm/objs/symbol_list.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang",
+      "-g",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Wpedantic",
+      "-fstack-usage",
+      "-std=c99",
+      "-I./include/",
+      "-I./libft",
+      "-c",
+      "-o",
+      "objs/symbol_table_entry.o",
+      "src/symbol_table_entry.c"
+    ],
+    "directory": "/home/gsaiago/estudo/c/my_nm",
+    "file": "/home/gsaiago/estudo/c/my_nm/src/symbol_table_entry.c",
+    "output": "/home/gsaiago/estudo/c/my_nm/objs/symbol_table_entry.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang",
+      "-g",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Wpedantic",
+      "-fstack-usage",
+      "-std=c99",
+      "-I./include/",
+      "-I./libft",
+      "-c",
+      "-o",
+      "objs/symbol_table_header.o",
+      "src/symbol_table_header.c"
+    ],
+    "directory": "/home/gsaiago/estudo/c/my_nm",
+    "file": "/home/gsaiago/estudo/c/my_nm/src/symbol_table_header.c",
+    "output": "/home/gsaiago/estudo/c/my_nm/objs/symbol_table_header.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang",
+      "-g",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Wpedantic",
+      "-fstack-usage",
+      "-std=c99",
+      "-I./include/",
+      "-I./libft",
+      "-c",
+      "-o",
+      "objs/symbol_table_it.o",
+      "src/symbol_table_it.c"
+    ],
+    "directory": "/home/gsaiago/estudo/c/my_nm",
+    "file": "/home/gsaiago/estudo/c/my_nm/src/symbol_table_it.c",
+    "output": "/home/gsaiago/estudo/c/my_nm/objs/symbol_table_it.o"
   }
 ]

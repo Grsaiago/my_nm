@@ -116,7 +116,7 @@ void symblst_sort(SymbolList **lst, int (*cmp)(SymbolList *, SymbolList *)) {
 }
 
 int symblst_cmp_lexicographic(SymbolList *a, SymbolList *b) {
-	return (strcmp(a->name, b->name));
+	return (ft_strncmp(a->name, b->name, SIZE_MAX));
 }
 
 static char resolve_nm_char(SectionHeaderTableIterator *shdr_it,

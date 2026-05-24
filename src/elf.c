@@ -3,21 +3,21 @@
 #include <sys/mman.h>
 
 int new_elf_file(MappedFile *file, ElfFile *elf) {
-	if (memcmp(file->data, ELFMAG, SELFMAG) != 0) {
+	if (ft_memcmp(file->data, ELFMAG, SELFMAG) != 0) {
 		return (-1);
 	}
 	switch (file->data[EI_CLASS]) {
 	case ELFCLASS32:
 		elf->type = BITS_32;
-		memcpy(&elf->header, file->data, sizeof(Elf32_Ehdr));
+		ft_memcpy(&elf->header, file->data, sizeof(Elf32_Ehdr));
 		break;
 	case ELFCLASS64:
 		elf->type = BITS_64;
-		memcpy(&elf->header, file->data, sizeof(Elf64_Ehdr));
+		ft_memcpy(&elf->header, file->data, sizeof(Elf64_Ehdr));
 		break;
 	case ELFCLASSNONE:
 	default:
-		printf("Failed to identify the architecture (32 or 64)\n");
+		ft_printf("Failed to identify the architecture (32 or 64)\n");
 		return (-1);
 	}
 	elf->data = file->data;

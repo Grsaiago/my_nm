@@ -1,15 +1,18 @@
 CC = clang
 CFLAGS = -g -Wall -Wextra -Werror -Wpedantic -fstack-usage -std=c99
-INCLUDES = -I./include/
+INCLUDES = -I./include/ -I./$(LIBFT_DIR)
 TEST_INCLUDES = -lcriterion
 
 SRC_DIR = src
 OBJ_DIR = objs
 TEST_DIR = tests
 TEST_OBJ_DIR = $(OBJ_DIR)/tests
+LIBFT_DIR = libft
+
 
 NAME = my_nm
 TEST_NAME = test_$(NAME)
+LIBFT = ./$(LIBFT_DIR)/libft.a
 
 SRCS = $(wildcard $(SRC_DIR)/*.c)
 TEST_SRCS = $(wildcard $(TEST_DIR)/*.c)
@@ -21,8 +24,8 @@ LIB_OBJS = $(filter-out $(OBJ_DIR)/main.o,$(OBJS))
 .PHONY: all
 all: help
 
-$(NAME): $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $(NAME)
+$(NAME): $(OBJS) $(LIBFT)
+	$(CC) $(CFLAGS) $(OBJS) -L$(LIBFT_DIR) -lft -o $(NAME)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
@@ -38,9 +41,11 @@ $(TEST_OBJ_DIR)/%.o: $(TEST_DIR)/%.c | $(TEST_OBJ_DIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 # Build test binary
-$(TEST_NAME): $(LIB_OBJS) $(TEST_OBJS)
-	$(CC) $(LIB_OBJS) $(TEST_OBJS) -o $(TEST_NAME) $(INCLUDES) $(TEST_INCLUDES)
+$(TEST_NAME): $(LIB_OBJS) $(TEST_OBJS) $(LIBFT)
+	$(CC) $(LIB_OBJS) $(TEST_OBJS) -L$(LIBFT_DIR) -lft -o $(TEST_NAME) $(TEST_INCLUDES)
 
+$(LIBFT):
+	$(MAKE) -C $(LIBFT_DIR)
 
 .PHONY: help
 help: ## Show this help message
@@ -49,17 +54,14 @@ help: ## Show this help message
 .PHONY: build
 build: $(NAME) ## Build the project (default)
 
-.PHONY: run
-run: $(NAME) ## Compile and run the my_nm without args
-	./$(NAME)
-
 .PHONY: test
 test: $(TEST_NAME) ## Build and run tests with criterion
 	./$(TEST_NAME)
 
 .PHONY: clean
 clean: ## Remove build artifacts
-	rm -rf $(OBJ_DIR) $(NAME) $(TEST_NAME)
+	$(MAKE) -C $(LIBFT_DIR) clean
+	rm -rf $(OBJ_DIR) $(NAME) $(TEST_NAME) $(PROFRAW) $(PROFDATA)
 
 .PHONY: re
 re: clean build ## Clean and rebuild everything

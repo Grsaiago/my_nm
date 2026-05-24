@@ -14,10 +14,9 @@
 
 #include <stdio.h>
 
-char	*ft_strdup(char *s1, int flag)
-{
-	int		len;
-	char	*ptr;
+char *ft_strdup(char *s1, int flag) {
+	int	  len;
+	char *ptr;
 
 	len = 0;
 	while (s1[len])
@@ -30,12 +29,4 @@ char	*ft_strdup(char *s1, int flag)
 	if (flag && s1)
 		free(s1);
 	return (ptr);
-}
-
-int	main (void)
-{
-	char	str[] = "Essa string aqui";
-
-	printf("A str original > %s\n", str);
-	printf("A func original > %s\n", ft_strdup((char *)str, 0));
 }
